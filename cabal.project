@@ -3,8 +3,11 @@
 
 packages:
     visual-linter.cabal
-    ../VisualFormatter/visual-formatter.cabal
-    ../xs/haskell/visual-xsharp-compiler/visual-xsharp-compiler.cabal
+    ../Formatter/visual-formatter.cabal
+    ../Compiler/Haskell/Syntax/visual-xsharp-syntax.cabal
+    ../Compiler/Haskell/Frontend/visual-xsharp-frontend.cabal
+    ../Compiler/Haskell/Core/visual-xsharp-core.cabal
+    ../Compiler/Haskell/Driver/visual-xsharp-compiler.cabal
 
 tests: True
 documentation: False
