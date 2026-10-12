@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: MPL-2.0 WITH AdditionRef-Progmasoft-Exception-1.1
  */
 
-package com.progmasoft.visual.linter.config
+package com.progmasoft.talalint.config
 
 /**
- * Typed state intended for a future `Visual.Linter.kts` script template.
+ * Typed state intended for a future `talalint.kts` script template.
  *
  * The scope owns defaults, validation, and immutable snapshots only. It deliberately does not
  * discover, compile, load, or execute Kotlin scripts; those responsibilities belong to the later

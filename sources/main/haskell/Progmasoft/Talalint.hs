@@ -8,7 +8,7 @@ language validity. Source-hygiene checks operate on the original physical text
 because line endings and trailing whitespace are intentionally absent from the
 semantic AST.
 -}
-module Visual.Linter
+module Progmasoft.Talalint
     ( LintSeverity (..)
     , LintDiagnostic (..)
     , availableChecks
@@ -17,10 +17,10 @@ module Visual.Linter
     ) where
 
 import Data.List (nub, sortOn)
-import Visual.Formatter
-import Visual.XSharp.AST
-import Visual.XSharp.Diagnostic
-import Visual.XSharp.Frontend
+import Progmasoft.Talafmt
+import Progmasoft.Tala.AST
+import Progmasoft.Tala.Diagnostic
+import Progmasoft.Tala.Frontend
 
 data LintSeverity = LintInfo | LintWarning | LintError
     deriving (Bounded, Enum, Eq, Ord, Read, Show)

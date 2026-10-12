@@ -7,10 +7,10 @@ import Data.Text qualified as Text
 import Data.Text.IO qualified as TextIO
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
-import Visual.Formatter (formattedSource)
-import Visual.Linter
-import Visual.XSharp.AST
-import Visual.XSharp.Frontend
+import Progmasoft.Talafmt (formattedSource)
+import Progmasoft.Talalint
+import Progmasoft.Tala.AST
+import Progmasoft.Tala.Frontend
 
 data Command = Help | ListChecks | Check FilePath | Fix FilePath
 
@@ -86,4 +86,4 @@ renderSeverity severity = case severity of
     LintError -> "error"
 
 usage :: IO ()
-usage = putStrLn "usage: vlint <file.vxs> | vlint -Fix <file.vxs> | vlint -List-Checks | vlint -Help"
+usage = putStrLn "usage: talalint <file.tala> | talalint -Fix <file.tala> | talalint -List-Checks | talalint -Help"
