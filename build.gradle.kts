@@ -12,7 +12,7 @@ plugins {
     id("com.diffplug.spotless") version "8.9.0"
 }
 
-group = "com.progmasoft.visual.linter"
+group = "com.progmasoft.talalint"
 version = "0.1.1"
 
 repositories { mavenCentral() }

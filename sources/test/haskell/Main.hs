@@ -5,9 +5,9 @@ module Main (main) where
 
 import Data.List (sort)
 import System.Exit (exitFailure)
-import Visual.Formatter
-import Visual.Linter
-import Visual.XSharp.Frontend
+import Progmasoft.Talafmt
+import Progmasoft.Talalint
+import Progmasoft.Tala.Frontend
 
 main :: IO ()
 main = do
@@ -32,8 +32,8 @@ validSource =
 
 reportsDiagnostics :: Bool
 reportsDiagnostics =
-    let sourceProblems = lintSource (CompilerInput "Program.vxs" validSource)
-        compilerProblems = lintSource (CompilerInput "Broken.vxs" "@")
+    let sourceProblems = lintSource (CompilerInput "Program.tala" validSource)
+        compilerProblems = lintSource (CompilerInput "Broken.tala" "@")
         ruleIds = map lintRuleId sourceProblems
      in sort ruleIds
             == sort
@@ -41,25 +41,25 @@ reportsDiagnostics =
                 , "format.mixedLineEndings"
                 , "format.missingFinalNewline"
                 ]
-            && any ((== "compiler.VXL0001") . lintRuleId) compilerProblems
+            && any ((== "compiler.TAL0001") . lintRuleId) compilerProblems
 
 safeFixes :: Bool
-safeFixes = case applySafeFixes (CompilerInput "Program.vxs" validSource) of
+safeFixes = case applySafeFixes (CompilerInput "Program.tala" validSource) of
     Left _ -> False
-    Right result -> null (lintSource (CompilerInput "Program.vxs" (formattedSource result)))
+    Right result -> null (lintSource (CompilerInput "Program.tala" (formattedSource result)))
 
 safeFixesAreIdempotent :: Bool
-safeFixesAreIdempotent = case applySafeFixes (CompilerInput "Program.vxs" validSource) of
+safeFixesAreIdempotent = case applySafeFixes (CompilerInput "Program.tala" validSource) of
     Left _ -> False
-    Right first -> case applySafeFixes (CompilerInput "Program.vxs" (formattedSource first)) of
+    Right first -> case applySafeFixes (CompilerInput "Program.tala" (formattedSource first)) of
         Left _ -> False
         Right second -> not (formattingChanged second) && formattedSource second == formattedSource first
 
 malformedSourceRemainsVisible :: Bool
 malformedSourceRemainsVisible =
-    let input = CompilerInput "Broken.vxs" "@   "
+    let input = CompilerInput "Broken.tala" "@   "
      in case applySafeFixes input of
-            Left _ -> any ((== "compiler.VXL0001") . lintRuleId) (lintSource input)
+            Left _ -> any ((== "compiler.TAL0001") . lintRuleId) (lintSource input)
             Right _ -> False
 
 checkCatalog :: Bool
@@ -91,7 +91,7 @@ currentProgram body =
         ]
 
 ruleIdsOf :: String -> [String]
-ruleIdsOf body = map lintRuleId (lintSource (CompilerInput "Program.vxs" (currentProgram body)))
+ruleIdsOf body = map lintRuleId (lintSource (CompilerInput "Program.tala" (currentProgram body)))
 
 currentFormsAreClean :: Bool
 currentFormsAreClean =
@@ -108,22 +108,22 @@ currentFormsAreClean =
         )
 
 dottedSelectorIsReported :: Bool
-dottedSelectorIsReported = "compiler.VXT0034" `elem` ruleIdsOf "auto held = Program.Log;"
+dottedSelectorIsReported = "compiler.TAT0034" `elem` ruleIdsOf "auto held = Program.Log;"
 
 ambiguousReferenceIsReported :: Bool
-ambiguousReferenceIsReported = "compiler.VXT0080" `elem` ruleIdsOf "auto held = Other::Pick;"
+ambiguousReferenceIsReported = "compiler.TAT0080" `elem` ruleIdsOf "auto held = Other::Pick;"
 
 boundReferenceIsReported :: Bool
-boundReferenceIsReported = "compiler.VXT0081" `elem` ruleIdsOf "int value = 1; auto held = value::Pick;"
+boundReferenceIsReported = "compiler.TAT0081" `elem` ruleIdsOf "int value = 1; auto held = value::Pick;"
 
 formatMismatchIsReported :: Bool
-formatMismatchIsReported = any (`elem` ruleIdsOf "Console.Printf(\"%d\", \"text\");") ["compiler.VXT0077", "compiler.VXT0078"]
+formatMismatchIsReported = any (`elem` ruleIdsOf "Console.Printf(\"%d\", \"text\");") ["compiler.TAT0077", "compiler.TAT0078"]
 
 safeFixesKeepReferences :: Bool
 safeFixesKeepReferences =
-    case applySafeFixes (CompilerInput "Program.vxs" (currentProgram "auto held = Demo.Program::Log;   ")) of
+    case applySafeFixes (CompilerInput "Program.tala" (currentProgram "auto held = Demo.Program::Log;   ")) of
         Right result ->
             formattingChanged result
                 && lines (formattedSource result) !! 10 == "        auto held = Demo.Program::Log;"
-                && null (lintSource (CompilerInput "Program.vxs" (formattedSource result)))
+                && null (lintSource (CompilerInput "Program.tala" (formattedSource result)))
         Left _ -> False

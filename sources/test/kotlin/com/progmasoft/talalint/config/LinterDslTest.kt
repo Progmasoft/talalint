@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MPL-2.0 WITH AdditionRef-Progmasoft-Exception-1.1
  */
 
-package com.progmasoft.visual.linter.config
+package com.progmasoft.talalint.config
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

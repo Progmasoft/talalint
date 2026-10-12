@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MPL-2.0 WITH AdditionRef-Progmasoft-Exception-1.1
  */
 
-package com.progmasoft.visual.linter.config
+package com.progmasoft.talalint.config
 
 class ExpressionsScope : RuleGroupScope() {
   var constantCondition by severity(Severity.WARNING)
