@@ -13,7 +13,11 @@ talalint --help
 talalint --version
 ```
 
-The linter reports what the compiler it is built with reports. Version 0.2.0 is built with the compiler of
+talalint is the linter of [Tala](https://tala.run/). It moved from the
+[compiler repository](https://github.com/Progmasoft/tala) with its history on 2026-10-18 and starts its own versions at
+0.1.0.
+
+The linter reports what the compiler it is built with reports. Version 0.1.0 is built with the compiler of
 Tala 0.1.0: a source may use method references (`Type::Method`), names written through their namespace,
 conditionals over strings and console output, and their diagnostics arrive under the `compiler` check, for example
 `compiler.TAT0080` for a method reference that does not select one overload and `compiler.TAT0076` for a format the
@@ -26,3 +30,18 @@ cannot read exits with status 2.
 The Kotlin module under `sources/main/kotlin` owns the typed `talalint.kts` configuration surface. It exposes the
 complete rule catalog as typed scope properties and produces immutable snapshots without discovering or evaluating
 scripts.
+
+## Building and testing
+
+talalint uses the compiler through the `tala-tooling` package and the formatter through the `talafmt` library. Until
+they are on Hackage, `cabal.project` fetches the compiler packages from Progmasoft/tala, pinned to the commit of the
+`tala-0.1.0` release, and talafmt from Progmasoft/talafmt, so the first build compiles them too.
+
+```powershell
+cabal update
+cabal build all
+cabal test all
+.\gradlew.bat check      # the Kotlin configuration model: format check and tests
+```
+
+You need GHC 9.10 and Cabal 3.16, and JDK 25 for the Kotlin module.

@@ -1,16 +1,61 @@
 -- SPDX-FileCopyrightText: 2026 Progmasoft <support@progmasoft.com>
 -- SPDX-License-Identifier: MPL-2.0 WITH AdditionRef-Progmasoft-Exception-1.1
 
-packages:
-    talalint.cabal
-    ../talafmt/talafmt.cabal
-    ../../Talac/Haskell/Syntax/tala-syntax.cabal
-    ../../Talac/Haskell/Frontend/tala-frontend.cabal
-    ../../Talac/Haskell/Core/tala-core.cabal
-    ../../Talac/Haskell/Driver/tala-compiler.cabal
-    ../../Talac/Haskell/Tooling/tala-tooling.cabal
+packages: talalint.cabal
 
+-- The compiler packages come from the Tala repository, pinned to the commit of
+-- the tala-0.1.0 release, until they are published on Hackage. Only
+-- tala-tooling is used directly; the others are its dependencies.
+source-repository-package
+    type: git
+    location: https://github.com/Progmasoft/tala
+    tag: 45cc3c365e21818b257b8ef622ca35cb8283e766
+    subdir:
+        Talac/Haskell/Syntax
+        Talac/Haskell/Frontend
+        Talac/Haskell/Core
+        Talac/Haskell/Driver
+        Talac/Haskell/Tooling
+
+-- talalint uses the talafmt library for its format check and --fix.
+source-repository-package
+    type: git
+    location: https://github.com/Progmasoft/talafmt
+    tag: 7bd7d20aa4723fc3111f016731434851451dddda
+
+with-compiler: ghc
 tests: True
-import: ../../Talac/Build/Warnings.project
 documentation: False
 write-ghc-environment-files: never
+
+-- Warnings are errors for this package only; the pinned packages build with
+-- their own settings.
+package talalint
+    ghc-options:
+        -Wall
+        -Wextra
+        -Werror
+        -Wcompat
+        -Widentities
+        -Wincomplete-patterns
+        -Wincomplete-record-updates
+        -Wincomplete-uni-patterns
+        -Wincomplete-record-selectors
+        -Wmissing-export-lists
+        -Wmissing-home-modules
+        -Wredundant-constraints
+        -Wmissing-signatures
+        -Wmissing-methods
+        -Wmissing-fields
+        -Wtype-defaults
+        -Woverflowed-literals
+        -Wempty-enumerations
+        -Woverlapping-patterns
+        -Wnoncanonical-monad-instances
+        -Wnoncanonical-monoid-instances
+        -Wredundant-bang-patterns
+        -Wunbanged-strict-patterns
+        -Wunused-imports
+        -Wunused-local-binds
+        -Wunused-top-binds
+        -Wname-shadowing
