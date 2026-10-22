@@ -91,6 +91,29 @@ jobs:
         shell: bash
         run: cabal check
 
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: 1.27.x
+          cache: false
+
+      # Stages the executable with the license and the notes, runs it with
+      # --version, and packs it with its SHA-256: what a release ships.
+      - name: Bundle
+        shell: bash
+        run: go run ./helpers/cmd/develop bundle
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: talalint-${{ matrix.os }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 14
+
   kotlin:
     name: Kotlin configuration (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -118,13 +141,50 @@ jobs:
         shell: bash
         run: ./gradlew check jacocoTestReport --no-daemon
 
+  helpers:
+    name: Go helpers (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-26.04, windows-2025]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: 1.27.x
+          cache: false
+
+      # gofmt, go mod verify, go vet and every helper test.
+      - name: Verify the helpers
+        shell: bash
+        run: go run ./helpers/cmd/verify-helpers
+
+      - name: Check the Markdown links
+        shell: bash
+        run: go run ./helpers/cmd/verify-docs
+
+      # Every version file states the same version, and every pin is a
+      # full commit.
+      - name: Check the version and the pins
+        shell: bash
+        run: |
+          go run ./helpers/cmd/develop version
+          go run ./helpers/cmd/develop pin
+
   required:
     name: CI Required
     runs-on: ubuntu-26.04
     if: always()
-    needs: [haskell, kotlin]
+    needs: [haskell, kotlin, helpers]
     steps:
       - name: Require every job
         run: |
           test '${{ needs.haskell.result }}' = success
           test '${{ needs.kotlin.result }}' = success
+          test '${{ needs.helpers.result }}' = success

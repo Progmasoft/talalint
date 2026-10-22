@@ -22,10 +22,11 @@
   dependencyDashboard: true,
   vulnerabilityAlerts: { enabled: false },
 
-  enabledManagers: ["github-actions", "gradle", "gradle-wrapper"],
+  enabledManagers: ["github-actions", "gradle", "gradle-wrapper", "gomod"],
 
   packageRules: [
     { matchManagers: ["github-actions"], groupName: "GitHub Actions" },
     { matchManagers: ["gradle", "gradle-wrapper"], groupName: "Gradle plugins and libraries" },
+    { matchManagers: ["gomod"], groupName: "Go helpers" },
   ],
 }
