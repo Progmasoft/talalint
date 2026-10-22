@@ -76,7 +76,8 @@ jobs:
       - name: Build the Go helpers for extraction
         if: matrix.language == 'go'
         shell: bash
-        run: go -C helpers build -a ./...
+        working-directory: helpers
+        run: go build -a ./...
 
       - name: Analyze
         uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
