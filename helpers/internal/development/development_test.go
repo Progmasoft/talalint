@@ -262,6 +262,13 @@ func TestVersionCommands(t *testing.T) {
 		t.Fatal(err, h.out.String())
 	}
 	h.runner.outputs["git tag --list sample-0.1.0"] = "sample-0.1.0"
+	h.runner.outputs["git ls-remote --tags origin refs/tags/sample-0.1.0"] = ""
+	if err := h.run("version", "0.1.0"); err == nil || !strings.Contains(err.Error(), "exists already") {
+		t.Fatal(err)
+	}
+	// A tag made on GitHub and not fetched yet.
+	h.runner.outputs["git tag --list sample-0.1.0"] = ""
+	h.runner.outputs["git ls-remote --tags origin refs/tags/sample-0.1.0"] = "1111111111111111111111111111111111111111\trefs/tags/sample-0.1.0"
 	if err := h.run("version", "0.1.0"); err == nil || !strings.Contains(err.Error(), "exists already") {
 		t.Fatal(err)
 	}
@@ -275,6 +282,7 @@ func TestVersionCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	h.runner.outputs["git tag --list sample-0.2.0"] = ""
+	h.runner.outputs["git ls-remote --tags origin refs/tags/sample-0.2.0"] = ""
 	if err := h.run("version", "0.2.0"); err != nil {
 		t.Fatal(err)
 	}

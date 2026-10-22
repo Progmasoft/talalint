@@ -49,7 +49,13 @@ func (w workspace) checkRelease(version project.Version, report func(string, ...
 	if err != nil {
 		return fmt.Errorf("git could not list the tags: %w", err)
 	}
-	if strings.TrimSpace(existing) != "" {
+	// A tag made on GitHub is not in the checkout until it is fetched, so
+	// origin is asked as well.
+	remote, err := w.runner.Output(w.root, "git", "ls-remote", "--tags", "origin", "refs/tags/"+tag)
+	if err != nil {
+		return fmt.Errorf("git could not list the tags of origin: %w", err)
+	}
+	if strings.TrimSpace(existing) != "" || strings.TrimSpace(remote) != "" {
 		return fmt.Errorf("the tag %s exists already; release tags are never moved", tag)
 	}
 	report("the tag %s is new", tag)
