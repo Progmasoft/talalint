@@ -6,7 +6,6 @@ module Main (main) where
 import Data.List (sort)
 import System.Exit (exitFailure)
 import CommandLineTests
-import Progmasoft.Talafmt
 import Progmasoft.Talalint
 import Progmasoft.Tala.Frontend
 
@@ -24,6 +23,8 @@ main = do
     check "a method reference through a value is a compiler diagnostic" boundReferenceIsReported
     check "a format that does not match its arguments is a compiler diagnostic" formatMismatchIsReported
     check "safe fixes keep a method reference as written" safeFixesKeepReferences
+    check "safe fixes end every line the way the first one ends" safeFixesFollowTheFirstLineEnding
+    check "safe fixes leave a clean source and an empty one alone" safeFixesLeaveCleanSources
 
 check :: String -> Bool -> IO ()
 check label passed = if passed then putStrLn ("PASS: " ++ label) else putStrLn ("FAIL: " ++ label) >> exitFailure
@@ -46,23 +47,27 @@ reportsDiagnostics =
             && any ((== "compiler.TAL0001") . lintRuleId) compilerProblems
 
 safeFixes :: Bool
-safeFixes = case applySafeFixes (CompilerInput "Program.tala" validSource) of
-    Left _ -> False
-    Right result -> null (lintSource (CompilerInput "Program.tala" (formattedSource result)))
+safeFixes = null (lintSource (CompilerInput "Program.tala" (applySafeFixes validSource)))
 
 safeFixesAreIdempotent :: Bool
-safeFixesAreIdempotent = case applySafeFixes (CompilerInput "Program.tala" validSource) of
-    Left _ -> False
-    Right first -> case applySafeFixes (CompilerInput "Program.tala" (formattedSource first)) of
-        Left _ -> False
-        Right second -> not (formattingChanged second) && formattedSource second == formattedSource first
+safeFixesAreIdempotent =
+    let first = applySafeFixes validSource
+     in applySafeFixes first == first
 
 malformedSourceRemainsVisible :: Bool
 malformedSourceRemainsVisible =
-    let input = CompilerInput "Broken.tala" "@   "
-     in case applySafeFixes input of
-            Left _ -> any ((== "compiler.TAL0001") . lintRuleId) (lintSource input)
-            Right _ -> False
+    let fixed = applySafeFixes "@   "
+     in fixed == "@\n" && any ((== "compiler.TAL0001") . lintRuleId) (lintSource (CompilerInput "Broken.tala" fixed))
+
+safeFixesFollowTheFirstLineEnding :: Bool
+safeFixesFollowTheFirstLineEnding =
+    applySafeFixes "a\r\nb\nc\rd" == "a\r\nb\r\nc\r\nd\r\n"
+        && applySafeFixes "a\nb\r\n" == "a\nb\n"
+
+safeFixesLeaveCleanSources :: Bool
+safeFixesLeaveCleanSources =
+    let clean = "namespace Example;\n\npublic class Program {}\n"
+     in applySafeFixes clean == clean && applySafeFixes "" == ""
 
 checkCatalog :: Bool
 checkCatalog =
@@ -123,9 +128,8 @@ formatMismatchIsReported = any (`elem` ruleIdsOf "Console.Printf(\"%d\", \"text\
 
 safeFixesKeepReferences :: Bool
 safeFixesKeepReferences =
-    case applySafeFixes (CompilerInput "Program.tala" (currentProgram "auto held = Demo.Program::Log;   ")) of
-        Right result ->
-            formattingChanged result
-                && lines (formattedSource result) !! 10 == "        auto held = Demo.Program::Log;"
-                && null (lintSource (CompilerInput "Program.tala" (formattedSource result)))
-        Left _ -> False
+    let source = currentProgram "auto held = Demo.Program::Log;   "
+        fixed = applySafeFixes source
+     in fixed /= source
+            && lines fixed !! 10 == "        auto held = Demo.Program::Log;"
+            && null (lintSource (CompilerInput "Program.tala" fixed))

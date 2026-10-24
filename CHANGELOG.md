@@ -5,6 +5,15 @@
 
 ## Unreleased
 
+- The compiler packages, `tala-tooling` and the packages it depends on, come
+  from Hackage instead of a pinned commit of Progmasoft/tala.
+- talalint no longer depends on talafmt. `--fix` applies the fixes of the
+  source-hygiene checks only: it removes trailing spaces and tabs, ends every
+  line the way the first one ends, and adds a final line break; it no longer
+  reformats the file. `applySafeFixes` now takes and returns the source text.
+- Sources are read and written as UTF-8 without line-ending translation, so
+  on Windows the line-ending check sees CRLF as written.
+
 ## 0.1.0 - 2026-10-18
 
 The first release of talalint from a repository of its own. Until now talalint

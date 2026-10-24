@@ -25,6 +25,17 @@ var sample = project.Project{
 
 const talaCommit = "45cc3c365e21818b257b8ef622ca35cb8283e766"
 
+func TestPinIsOnlyOfferedWithPins(t *testing.T) {
+	bare := newCommand(environment{project: project.Project{Name: "bare"}})
+	if found, _, err := bare.Find([]string{"pin"}); err == nil && found != bare {
+		t.Fatal("a repository without pins offers the pin command")
+	}
+	pinned := newCommand(environment{project: sample})
+	if found, _, err := pinned.Find([]string{"pin"}); err != nil || found == pinned {
+		t.Fatal("a repository with pins does not offer the pin command")
+	}
+}
+
 // fakeRunner records what a command would start. Programs not in versions
 // are missing; outputs answers Output calls by the program's base name.
 type fakeRunner struct {

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/Progmasoft/talalint/helpers/internal/project"
 )
 
 // Exercise the exact public invocation, not just the implementation package.
@@ -16,7 +18,11 @@ func TestDeveloperEntrypointDelegatesHelp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("developer help failed: %v\n%s", err, output)
 	}
-	for _, expected := range []string{"Developer command of", "doctor", "check", "bundle", "coverage", "release-notes", "pin"} {
+	expected := []string{"Developer command of", "doctor", "check", "bundle", "coverage", "release-notes"}
+	if len(project.Current.Pins) > 0 {
+		expected = append(expected, "pin")
+	}
+	for _, expected := range expected {
 		if !strings.Contains(string(output), expected) {
 			t.Errorf("developer help is missing %q", expected)
 		}
