@@ -23,7 +23,6 @@ library
     hs-source-dirs: sources/main/haskell
     build-depends:
         base >=4.20 && <4.23,
-        talafmt >=0.1.0 && <0.2,
         tala-tooling >=0.1.0 && <0.2
     default-language: GHC2024
 
@@ -39,7 +38,6 @@ executable talalint
     build-depends:
         base >=4.20 && <4.23,
         text >=2.1 && <2.3,
-        talafmt,
         talalint,
         tala-tooling
     default-language: GHC2024
@@ -52,7 +50,10 @@ test-suite talalint-tests
     hs-source-dirs: sources/test/haskell
     build-depends:
         base >=4.20 && <4.23,
-        talafmt,
         talalint,
         tala-tooling
     default-language: GHC2024
+
+source-repository head
+    type: git
+    location: https://github.com/Progmasoft/talalint

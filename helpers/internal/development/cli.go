@@ -355,11 +355,23 @@ the Unreleased notes of the changelog into its section.`,
 	notes.Flags().StringVar(&notesOutput, "output", "", "write the notes to this file")
 	root.AddCommand(notes)
 
-	pinNames := make([]string, len(p.Pins))
-	for index, pin := range p.Pins {
+	// A repository without source-repository-package pins has nothing for
+	// pin to show or move.
+	if len(p.Pins) > 0 {
+		root.AddCommand(newPinCommand(env, withWorkspace))
+	}
+	return root
+}
+
+func newPinCommand(
+	env environment,
+	withWorkspace func(func(workspace, *cobra.Command, []string) error) func(*cobra.Command, []string) error,
+) *cobra.Command {
+	pinNames := make([]string, len(env.project.Pins))
+	for index, pin := range env.project.Pins {
 		pinNames[index] = pin.Name
 	}
-	root.AddCommand(&cobra.Command{
+	return &cobra.Command{
 		Use:   "pin [<repository> <commit|tag|branch>]",
 		Short: "Show or change the commits cabal.project takes packages from.",
 		Long: `Show or change the commits cabal.project takes packages from.
@@ -380,6 +392,5 @@ because a pin must stay reproducible.`,
 			}
 			return w.updatePin(arguments[0], arguments[1], env.report)
 		}),
-	})
-	return root
+	}
 }

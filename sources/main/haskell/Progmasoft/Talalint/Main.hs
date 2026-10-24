@@ -3,6 +3,7 @@
 
 module Main (main) where
 
+import Control.Monad (when)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.IO qualified as TextIO
@@ -10,8 +11,17 @@ import System.Environment (getArgs)
 import Data.Version (showVersion)
 import Paths_talalint (version)
 import System.Exit (ExitCode (..), exitFailure, exitWith)
-import System.IO (hPutStrLn, stderr)
-import Progmasoft.Talafmt (formattedSource)
+import System.IO
+    ( Handle
+    , IOMode (..)
+    , hPutStrLn
+    , hSetEncoding
+    , hSetNewlineMode
+    , noNewlineTranslation
+    , stderr
+    , utf8
+    , withFile
+    )
 import Progmasoft.Talalint
 import Progmasoft.Talalint.CommandLine
 import Progmasoft.Tala.AST
@@ -37,7 +47,7 @@ usageError = 2
 -- | Lint one file; True when nothing is left to report.
 lintPath :: Mode -> FilePath -> IO Bool
 lintPath mode path = do
-    source <- Text.unpack <$> TextIO.readFile path
+    source <- Text.unpack <$> withFile path ReadMode (\handle -> asWritten handle >> TextIO.hGetContents handle)
     finalSource <- case mode of
         Fix -> applyFixes path source
         Report -> pure source
@@ -46,11 +56,18 @@ lintPath mode path = do
     pure (null problems)
 
 applyFixes :: FilePath -> String -> IO String
-applyFixes path source = case applySafeFixes (CompilerInput path source) of
-    Left _ -> pure source
-    Right result -> do
-        TextIO.writeFile path (Text.pack (formattedSource result))
-        pure (formattedSource result)
+applyFixes path source = do
+    let fixed = applySafeFixes source
+    when (fixed /= source) $
+        withFile path WriteMode (\handle -> asWritten handle >> TextIO.hPutStr handle (Text.pack fixed))
+    pure fixed
+
+{- | Reads and writes UTF-8 with the line endings as they are. The platform's
+text mode would turn CRLF into LF on Windows and hide the line endings that
+the checks look at.
+-}
+asWritten :: Handle -> IO ()
+asWritten handle = hSetEncoding handle utf8 >> hSetNewlineMode handle noNewlineTranslation
 
 printDiagnostic :: LintDiagnostic -> IO ()
 printDiagnostic problem =

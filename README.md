@@ -33,9 +33,9 @@ scripts.
 
 ## Building and testing
 
-talalint uses the compiler through the `tala-tooling` package and the formatter through the `talafmt` library. Until
-they are on Hackage, `cabal.project` fetches the compiler packages from Progmasoft/tala, pinned to the commit of the
-`tala-0.1.0` release, and talafmt from Progmasoft/talafmt, so the first build compiles them too.
+talalint uses the compiler through the [`tala-tooling`](https://hackage.haskell.org/package/tala-tooling) package
+from Hackage; the first build compiles it and the compiler packages it depends on. It does not use the formatter:
+`--fix` applies the fixes of its own checks only.
 
 ```powershell
 cabal update
@@ -49,8 +49,8 @@ You need GHC 9.10 and Cabal 3.16, and JDK 25 for the Kotlin module.
 ## Developer helpers
 
 The Go programs in [helpers](helpers/README.md) run the same commands as CI: `prebuild install` sets up a host,
-`develop check` runs every gate, `develop bundle` packs a release archive for this host, and `develop version` and
-`develop pin` keep the version files and the pinned commits in order.
+`develop check` runs every gate, `develop bundle` packs a release archive for this host, and `develop version` keeps
+the version files in order.
 
 ```powershell
 go run ./helpers/cmd/prebuild install

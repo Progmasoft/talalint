@@ -36,7 +36,6 @@ overrides the choice.
 | `develop version <x.y.z>` | Checks that the checkout can be tagged `talalint-<x.y.z>`: every file states it, `CHANGELOG.md` has its notes, and the tag is new. |
 | `develop version --set <x.y.z>` | Writes the version into every version file and turns the Unreleased notes into its changelog section. |
 | `develop release-notes <x.y.z> [--output <file>]` | Prints the changelog section of a version, for the release page. |
-| `develop pin [<repository> <commit\|tag\|branch>]` | Lists the `source-repository-package` pins (`tala` and `talafmt`) or moves one; a tag or branch is resolved to its commit with `git ls-remote`. |
 | `repo-info [--json]` | Reports the checkout, version, pins and tools without changing anything. |
 | `verify-docs [--haddock [--require-complete]]` | Checks every relative Markdown link and anchor; with `--haddock` also builds the Haddock reference and lists undocumented exports. |
 | `verify-helpers` | Checks the helpers themselves: SPDX headers, gofmt, `go mod verify`, `go vet` and their tests. |
@@ -51,8 +50,8 @@ overrides the choice.
 | `haskell` | `cabal build all` | `cabal test all` | `cabal check` |
 | `kotlin` | `gradlew assemble` | `gradlew check` | `gradlew check jacocoTestReport` |
 
-On Windows the helpers run Cabal with `core.longpaths` set through Git's environment configuration: the pinned Tala
-repository has paths longer than Windows allows by default. Nothing in the global Git configuration changes.
+On Windows the helpers run Cabal with `core.longpaths` set through Git's environment configuration, in case a
+repository is pinned again; nothing in the global Git configuration changes.
 
 ## Releasing
 
