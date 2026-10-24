@@ -17,7 +17,6 @@ module Progmasoft.Talalint
     ) where
 
 import Data.List (nub, sortOn)
-import Progmasoft.Talafmt
 import Progmasoft.Tala.AST
 import Progmasoft.Tala.Diagnostic
 import Progmasoft.Tala.Frontend
@@ -51,8 +50,24 @@ lintSource input =
             ++ missingFinalNewlineDiagnostics input
         )
 
-applySafeFixes :: CompilerInput -> Either [Diagnostic] FormatResult
-applySafeFixes = formatSource defaultFormatOptions
+{- | The fixes of the source-hygiene checks, and nothing else: spaces and tabs
+at the end of a line are removed, every line ends the way the first one does,
+and a non-empty source ends with a line break. The text needs no parse, so a
+source with compiler errors is fixed too and its errors stay to be reported.
+-}
+applySafeFixes :: String -> String
+applySafeFixes source
+    | null source = source
+    | otherwise = concatMap ((++ ending) . trimHorizontalEnd) withoutLast
+    where
+        allLines = logicalLines source
+        withoutLast
+            | endsWithLineBreak source = reverse (drop 1 (reverse allLines))
+            | otherwise = allLines
+        ending = case lineEndings source of
+            "CRLF" : _ -> "\r\n"
+            "CR" : _ -> "\r"
+            _ -> "\n"
 
 compilerDiagnostics :: CompilerInput -> [LintDiagnostic]
 compilerDiagnostics input = case analyzeSemantics input of

@@ -3,32 +3,15 @@
 
 packages: talalint.cabal
 
--- The compiler packages come from the Tala repository, pinned to the commit of
--- the tala-0.1.0 release, until they are published on Hackage. Only
--- tala-tooling is used directly; the others are its dependencies.
-source-repository-package
-    type: git
-    location: https://github.com/Progmasoft/tala
-    tag: 45cc3c365e21818b257b8ef622ca35cb8283e766
-    subdir:
-        Talac/Haskell/Syntax
-        Talac/Haskell/Frontend
-        Talac/Haskell/Core
-        Talac/Haskell/Driver
-        Talac/Haskell/Tooling
-
--- talalint uses the talafmt library for its format check and --fix.
-source-repository-package
-    type: git
-    location: https://github.com/Progmasoft/talafmt
-    tag: 7bd7d20aa4723fc3111f016731434851451dddda
+-- The compiler packages come from Hackage. Only tala-tooling is used
+-- directly; the others are its dependencies.
 
 with-compiler: ghc
 tests: True
 documentation: False
 write-ghc-environment-files: never
 
--- Warnings are errors for this package only; the pinned packages build with
+-- Warnings are errors for this package only; its dependencies build with
 -- their own settings.
 package talalint
     ghc-options:

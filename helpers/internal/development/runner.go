@@ -79,8 +79,8 @@ func mergeEnvironment(base, overrides []string) []string {
 	return append(merged, overrides...)
 }
 
-// cabalEnvironment is the environment Cabal runs in. On Windows the pinned
-// Tala repository has paths longer than MAX_PATH, which Git refuses to check
+// cabalEnvironment is the environment Cabal runs in. On Windows a pinned
+// repository can have paths longer than MAX_PATH, which Git refuses to check
 // out unless core.longpaths is on; the setting is added through Git's
 // environment configuration, after any the developer already set, so neither
 // the global configuration nor the checkout is changed.

@@ -8,8 +8,4 @@ package project
 var Current = Project{
 	Name:       "talalint",
 	Components: []Component{Haskell, Kotlin},
-	Pins: []Pin{
-		{Name: "tala", Location: "https://github.com/Progmasoft/tala"},
-		{Name: "talafmt", Location: "https://github.com/Progmasoft/talafmt"},
-	},
 }

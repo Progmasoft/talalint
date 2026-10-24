@@ -38,13 +38,6 @@ jobs:
           ghc: 9.10.3
           cabal: 3.16.1.0
 
-      # Cabal clones Progmasoft/tala below a directory named after a 64-digit
-      # hash; some of its paths are then longer than Windows allows by default.
-      - name: Allow long paths in Git
-        if: runner.os == 'Windows'
-        shell: bash
-        run: git config --global core.longpaths true
-
       - name: Pin the SDK of the selected Xcode
         if: runner.os == 'macOS'
         shell: bash
@@ -77,8 +70,8 @@ jobs:
         shell: bash
         run: cabal update
 
-      # The compiler packages are fetched from Progmasoft/tala at the pinned
-      # commit and built with the tool; warnings are errors for the tool only.
+      # The compiler packages come from Hackage and are built with the tool;
+      # warnings are errors for the tool only.
       - name: Build
         shell: bash
         run: cabal build all
