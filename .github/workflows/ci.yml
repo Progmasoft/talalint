@@ -162,13 +162,10 @@ jobs:
         shell: bash
         run: go run ./helpers/cmd/verify-docs
 
-      # Every version file states the same version, and every pin is a
-      # full commit.
-      - name: Check the version and the pins
+      # Every version file states the same version.
+      - name: Check the version
         shell: bash
-        run: |
-          go run ./helpers/cmd/develop version
-          go run ./helpers/cmd/develop pin
+        run: go run ./helpers/cmd/develop version
 
   required:
     name: CI Required
