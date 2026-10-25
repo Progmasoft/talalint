@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-25
+
 - The compiler packages, `tala-tooling` and the packages it depends on, come
   from Hackage instead of a pinned commit of Progmasoft/tala.
 - talalint no longer depends on talafmt. `--fix` applies the fixes of the
