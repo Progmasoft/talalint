@@ -5,6 +5,9 @@
 
 ## Unreleased
 
+## 0.2.1 - 2026-11-01
+
+- The compiler packages move to `tala-tooling` 0.2.
 - Project files move to the Progmasoft Linking Exception, Version 2.0. Earlier
   releases can rely on Version 2.0 too.
 
