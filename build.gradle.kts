@@ -7,9 +7,9 @@ import org.gradle.api.JavaVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.21"
     jacoco
-    id("com.diffplug.spotless") version "8.9.0"
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
 group = "com.progmasoft.talalint"
@@ -54,7 +54,7 @@ spotless {
 
 tasks.test { useJUnitPlatform() }
 
-jacoco { toolVersion = "0.8.15" }
+jacoco { toolVersion = "0.8.16" }
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
