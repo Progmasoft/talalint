@@ -34,6 +34,7 @@ const (
 	bootstrapUbuntu
 	bootstrapFedora
 	bootstrapDebian
+	bootstrapArch
 )
 
 type toolRequirement struct {
@@ -44,17 +45,18 @@ type toolRequirement struct {
 	wingetPackageID string
 	homebrewFormula string
 	// homebrewCask installs a cask rather than a formula.
-	homebrewCask bool
-	aptPackages  []string
-	dnfPackages  []string
+	homebrewCask   bool
+	aptPackages    []string
+	dnfPackages    []string
+	pacmanPackages []string
 }
 
 var allTools = []toolRequirement{
-	{name: "Go", executables: []string{"go"}, wingetPackageID: "GoLang.Go", homebrewFormula: "go", aptPackages: []string{"golang-go"}, dnfPackages: []string{"golang"}},
-	{name: "Git", executables: []string{"git"}, wingetPackageID: "Git.Git", homebrewFormula: "git", aptPackages: []string{"git"}, dnfPackages: []string{"git"}},
+	{name: "Go", executables: []string{"go"}, wingetPackageID: "GoLang.Go", homebrewFormula: "go", aptPackages: []string{"golang-go"}, dnfPackages: []string{"golang"}, pacmanPackages: []string{"go"}},
+	{name: "Git", executables: []string{"git"}, wingetPackageID: "Git.Git", homebrewFormula: "git", aptPackages: []string{"git"}, dnfPackages: []string{"git"}, pacmanPackages: []string{"git"}},
 	{name: "GHCup", executables: []string{"ghcup"}, components: []project.Component{project.Haskell}, homebrewFormula: "ghcup"},
-	{name: "Temurin JDK 25", executables: []string{"java"}, components: []project.Component{project.Kotlin, project.IntelliJ}, wingetPackageID: "EclipseAdoptium.Temurin.25.JDK", homebrewFormula: "temurin@25", homebrewCask: true, aptPackages: []string{"openjdk-25-jdk"}, dnfPackages: []string{"java-25-openjdk-devel"}},
-	{name: "Node.js", executables: []string{"node", "npm"}, components: []project.Component{project.VSCode}, wingetPackageID: "OpenJS.NodeJS.LTS", homebrewFormula: "node", aptPackages: []string{"nodejs", "npm"}, dnfPackages: []string{"nodejs", "npm"}},
+	{name: "Temurin JDK 25", executables: []string{"java"}, components: []project.Component{project.Kotlin, project.IntelliJ}, wingetPackageID: "EclipseAdoptium.Temurin.25.JDK", homebrewFormula: "temurin@25", homebrewCask: true, aptPackages: []string{"openjdk-25-jdk"}, dnfPackages: []string{"java-25-openjdk-devel"}, pacmanPackages: []string{"jdk25-openjdk"}},
+	{name: "Node.js", executables: []string{"node", "npm"}, components: []project.Component{project.VSCode}, wingetPackageID: "OpenJS.NodeJS.LTS", homebrewFormula: "node", aptPackages: []string{"nodejs", "npm"}, dnfPackages: []string{"nodejs", "npm"}, pacmanPackages: []string{"nodejs", "npm"}},
 }
 
 // requiredTools are the tools the components of the project need.
@@ -93,8 +95,8 @@ func usage(p project.Project) string {
 	}
 	return p.Name + ` development-host bootstrap
 
-Supported hosts are Windows 10/11, macOS 15/26, Ubuntu 26.04 LTS, Fedora 43
-and Debian 13. The tools are ` + strings.Join(names, ", ") + `; GHCup then
+Supported hosts are Windows 10/11, macOS 15/26, Ubuntu 26.04 LTS, Fedora 43,
+Debian 13 and Arch Linux (rolling, not tested by CI). The tools are ` + strings.Join(names, ", ") + `; GHCup then
 installs GHC ` + pinnedGHC + ` and Cabal ` + pinnedCabal + `, the versions CI builds with. GHCup
 itself comes from a bootstrap script pinned by commit and SHA-256.`
 }
@@ -130,7 +132,7 @@ func newPrebuildCommand(p project.Project, runner bootstrapRunner, output, error
 		},
 		&cobra.Command{
 			Use:   "install",
-			Short: "Install missing tools with winget, Homebrew, apt, or dnf, and GHC and Cabal with GHCup.",
+			Short: "Install missing tools with winget, Homebrew, apt, dnf, or pacman, and GHC and Cabal with GHCup.",
 			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, args []string) error {
 				host, err := detectBootstrapHost(runtime.GOOS)
@@ -185,8 +187,10 @@ func classifyBootstrapLinux(release string) (bootstrapHost, error) {
 		return bootstrapFedora, nil
 	case fields["ID"] == "debian" && fields["VERSION_ID"] == "13":
 		return bootstrapDebian, nil
+	case fields["ID"] == "arch":
+		return bootstrapArch, nil
 	default:
-		return bootstrapUnsupported, fmt.Errorf("unsupported Linux release %q %q; expected Ubuntu 26.04 LTS, Fedora 43 or Debian 13", fields["ID"], fields["VERSION_ID"])
+		return bootstrapUnsupported, fmt.Errorf("unsupported Linux release %q %q; expected Ubuntu 26.04 LTS, Fedora 43, Debian 13 or Arch Linux", fields["ID"], fields["VERSION_ID"])
 	}
 }
 
@@ -317,16 +321,26 @@ func installLinuxTools(host bootstrapHost, runner bootstrapRunner, missing []too
 	if host == bootstrapFedora {
 		manager = "dnf"
 		base = []string{"curl", "xz", "gmp-devel", "libffi-devel", "ncurses-devel", "gcc", "make"}
+	} else if host == bootstrapArch {
+		manager = "pacman"
+		base = []string{"curl", "xz", "gmp", "libffi", "ncurses", "gcc", "make"}
 	}
 	if _, err := runner.LookPath(manager); err != nil {
 		return fmt.Errorf("%s is required on %s", manager, bootstrapHostName(host))
 	}
+	// apt installs from the package lists it has, so they are refreshed
+	// first. pacman refreshes its databases only together with the whole
+	// system, because Arch does not support a partial upgrade.
 	if host == bootstrapUbuntu || host == bootstrapDebian {
 		if err := runLinuxPackageManager(runner, manager, []string{"update"}); err != nil {
 			return err
 		}
+	} else if host == bootstrapArch {
+		if err := runLinuxPackageManager(runner, manager, []string{"-Syu", "--noconfirm"}); err != nil {
+			return fmt.Errorf("cannot upgrade Arch Linux before installing: %w", err)
+		}
 	}
-	if err := runLinuxPackageManager(runner, manager, linuxInstallArguments(base)); err != nil {
+	if err := runLinuxPackageManager(runner, manager, linuxInstallArguments(host, base)); err != nil {
 		return fmt.Errorf("cannot install Linux bootstrap prerequisites: %w", err)
 	}
 	for _, requirement := range missing {
@@ -340,18 +354,27 @@ func installLinuxTools(host bootstrapHost, runner bootstrapRunner, missing []too
 		packages := requirement.aptPackages
 		if host == bootstrapFedora {
 			packages = requirement.dnfPackages
+		} else if host == bootstrapArch {
+			packages = requirement.pacmanPackages
 		}
 		if len(packages) == 0 {
 			return fmt.Errorf("no %s package is defined for %s", requirement.name, bootstrapHostName(host))
 		}
-		if err := runLinuxPackageManager(runner, manager, linuxInstallArguments(packages)); err != nil {
+		if err := runLinuxPackageManager(runner, manager, linuxInstallArguments(host, packages)); err != nil {
 			return fmt.Errorf("cannot install %s: %w", requirement.name, err)
 		}
 	}
 	return nil
 }
 
-func linuxInstallArguments(packages []string) []string {
+// linuxInstallArguments are the arguments that install packages without a
+// question. On Arch they run after the whole system was upgraded with
+// pacman -Syu: installing from refreshed databases without upgrading the
+// rest would be a partial upgrade, which Arch does not support.
+func linuxInstallArguments(host bootstrapHost, packages []string) []string {
+	if host == bootstrapArch {
+		return append([]string{"-S", "--needed", "--noconfirm"}, packages...)
+	}
 	return append([]string{"install", "-y"}, packages...)
 }
 
@@ -429,6 +452,8 @@ func bootstrapHostName(host bootstrapHost) string {
 		return "Fedora 43 (not tested by CI)"
 	case bootstrapDebian:
 		return "Debian 13 (not tested by CI)"
+	case bootstrapArch:
+		return "Arch Linux (rolling, not tested by CI)"
 	default:
 		return "unsupported"
 	}
