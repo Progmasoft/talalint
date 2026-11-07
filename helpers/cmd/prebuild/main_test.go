@@ -172,6 +172,7 @@ func TestClassifyBootstrapLinuxUsesPinnedTierReleases(t *testing.T) {
 		{`ID=debian` + "\n" + `VERSION_ID="13"`, bootstrapDebian},
 		{`PRETTY_NAME="Debian GNU/Linux 13 (trixie)"` + "\n" + `ID=debian` + "\n" + `VERSION_ID="13"` + "\n" + `VERSION_CODENAME=trixie`, bootstrapDebian},
 		{`ID=fedora` + "\n" + `VERSION_ID=43`, bootstrapFedora},
+		{`NAME="Arch Linux"` + "\n" + `ID=arch` + "\n" + `BUILD_ID=rolling`, bootstrapArch},
 	} {
 		got, err := classifyBootstrapLinux(test.release)
 		if err != nil || got != test.want {
@@ -180,6 +181,24 @@ func TestClassifyBootstrapLinuxUsesPinnedTierReleases(t *testing.T) {
 	}
 	if _, err := classifyBootstrapLinux("ID=fedora\nVERSION_ID=44"); err == nil {
 		t.Fatal("Fedora N was accepted as the Fedora N-1 tier")
+	}
+	if _, err := classifyBootstrapLinux("ID=manjaro\nID_LIKE=arch"); err == nil {
+		t.Fatal("a distribution like Arch was accepted as Arch")
+	}
+}
+
+func TestArchInstallsWithPacmanWithoutRefreshingItsDatabases(t *testing.T) {
+	for _, requirement := range allTools {
+		if len(requirement.aptPackages) != 0 && len(requirement.pacmanPackages) == 0 {
+			t.Fatalf("%s has apt packages and no pacman package", requirement.name)
+		}
+	}
+	got := linuxInstallArguments(bootstrapArch, []string{"go"})
+	if strings.Join(got, " ") != "-S --needed --noconfirm go" {
+		t.Fatalf("pacman arguments = %#v", got)
+	}
+	if got := linuxInstallArguments(bootstrapUbuntu, []string{"golang-go"}); strings.Join(got, " ") != "install -y golang-go" {
+		t.Fatalf("apt arguments = %#v", got)
 	}
 }
 

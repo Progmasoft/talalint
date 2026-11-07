@@ -21,7 +21,7 @@ overrides the choice.
 | Command | What it does |
 | --- | --- |
 | `prebuild check` | Reports which host tools are missing. Changes nothing. |
-| `prebuild install` | Installs the missing tools with winget, Homebrew, apt or dnf: Go, Git, GHCup (then GHC 9.10.3 and Cabal 3.16.1.0) and Temurin JDK 25. GHCup comes from its bootstrap script pinned by commit and SHA-256. |
+| `prebuild install` | Installs the missing tools with winget, Homebrew, apt, dnf or pacman: Go, Git, GHCup (then GHC 9.10.3 and Cabal 3.16.1.0) and Temurin JDK 25. GHCup comes from its bootstrap script pinned by commit and SHA-256. |
 | `develop doctor [--json]` | Finds every tool, reads its version and compares it with the versions CI uses. |
 | `develop build [--component <name>]... [-- <Cabal options>]` | Builds every component, or the ones named. |
 | `develop test [--component <name>]... [-- <Cabal options>]` | Builds and runs the tests. |
