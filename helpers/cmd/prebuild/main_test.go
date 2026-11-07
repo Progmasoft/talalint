@@ -187,7 +187,7 @@ func TestClassifyBootstrapLinuxUsesPinnedTierReleases(t *testing.T) {
 	}
 }
 
-func TestArchInstallsWithPacmanWithoutRefreshingItsDatabases(t *testing.T) {
+func TestArchInstallsWithPacmanAfterOneSystemUpgrade(t *testing.T) {
 	for _, requirement := range allTools {
 		if len(requirement.aptPackages) != 0 && len(requirement.pacmanPackages) == 0 {
 			t.Fatalf("%s has apt packages and no pacman package", requirement.name)
@@ -360,5 +360,33 @@ func TestUnixGHCupExecutesVerifiedFileWithoutShellCommandString(t *testing.T) {
 	path := runner.invocations[0][4]
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatalf("temporary bootstrap script was not removed after execution: %v", err)
+	}
+}
+
+func TestArchUpgradesTheWholeSystemOnceBeforeInstalling(t *testing.T) {
+	runner := &bootstrapFakeRunner{paths: map[string]string{"pacman": "/usr/bin/pacman", "sudo": "/usr/bin/sudo"}}
+	var git toolRequirement
+	for _, requirement := range allTools {
+		if requirement.name == "Git" {
+			git = requirement
+		}
+	}
+	if err := installLinuxTools(bootstrapArch, runner, []toolRequirement{git}); err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, invocation := range runner.invocations {
+		if invocation[0] == "sudo" {
+			invocation = invocation[1:]
+		}
+		got = append(got, strings.Join(invocation, " "))
+	}
+	want := []string{
+		"pacman -Syu --noconfirm",
+		"pacman -S --needed --noconfirm curl xz gmp libffi ncurses gcc make",
+		"pacman -S --needed --noconfirm git",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("Arch commands = %#v, want %#v", got, want)
 	}
 }
